@@ -6,7 +6,7 @@ import config from "./config/default"
 //Create the connection
 let tiktokUsername = config.tiktokUsername;
 let tiktokLive = new TikTokLiveConnection(tiktokUsername,{
-    enableWebsocketFallBack: true
+    enableWebsocketFallback: true
 });
 
 
