@@ -1,51 +1,58 @@
-import textToSpeech from "@google-cloud/text-to-speech";
-import fs from "fs";
-import util from "util";
-import path from "path";
-import logger from "../utils/logger.js";
+import fs from 'fs';
+import path from 'path';
+import axios from 'axios';
+import logger from '../utils/logger'
 
-// Create Google TTS client
-const client = new textToSpeech.TextToSpeechClient();
+//load from .env
+const API_KEY = process.env.ELEVENLABS_API_KEY;
+const DEFAULT_VOICE = process.env.ELEVENLABS_DEFAULT_VOICE;
 
-// Where TTS audio files will be stored
+
+//Create audio directory
 const AUDIO_OUTPUT = "./audio";
 
-if (!fs.existsSync(AUDIO_OUTPUT)) {
+if(!fs.existsSync(AUDIO_OUTPUT)) {
     fs.mkdirSync(AUDIO_OUTPUT);
 }
 
 /**
- * Generate TTS audio from text.
+ * Generate TTS using ElevenLabs
  * @param {string} text - The text to convert to speech
- * @param {string} voiceName - (Optional) Google TTS voice
- * @returns {string} filePath - Path to generated audio file
+ * @param {string} voiceId - Optional voice override
+ * @returns {string|null} - Path to generated audio file
  */
-export async function speak(text, voiceName = "en-US-Wavenet-D") {
+export async function speak(text, voiceId = DEFAULT_VOICE) {
     try {
-        logger.info(`TTS generating audio for text: "${text}"`);
+        logger.info(`🔊 ElevenLabs TTS generating:"${text}"`);
 
-        const request = {
-            input: { text },
-            voice: { languageCode: "en-US", name: voiceName },
-            audioConfig: { audioEncoding: "mp3" },
-        };
+        const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`;
 
-        // Convert text to speech
-        const [response] = await client.synthesizeSpeech(request);
+        const response = await axios.post(
+            url,{
+                   text: text,
+                model_id: "eleven_multilingual_v2",
+                voice_settings: {
+                    stability: 0.5,
+                    similarity_boost: 0.9
+            }
+        },
+        {
+                headers: {
+                    "xi-api-key": API_KEY,
+                    "Content-Type": "application/json",
+                },
+                responseType: "arraybuffer"
+            }
+        );
 
-        // File name
+        //Save audio file
         const fileName = `tts_${Date.now()}.mp3`;
         const filePath = path.join(AUDIO_OUTPUT, fileName);
 
-        // Save audio file
-        const writeFile = util.promisify(fs.writeFile);
-        await writeFile(filePath, response.audioContent, "binary");
-
-        logger.success(`TTS generated: ${filePath}`);
-        return filePath;
-
-    } catch (err) {
-        logger.error(`TTS error: ${err.message}`);
+        fs.writeFileSync(filePath, response.data);
+        logger.success(`🎧 ElevenLabs TTS saved: ${filePath}`)
+    } catch (error) {
+        logger.error(`❌ ElevenLabs TTS Error: ${error.message}`);
         return null;
     }
 }
