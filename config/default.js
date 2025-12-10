@@ -21,4 +21,4 @@ export default {
         showGifts: true,
         showLikes: true
      }
-};
+}; 
