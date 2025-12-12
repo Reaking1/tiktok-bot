@@ -1,7 +1,7 @@
 // test.js (local terminal tester)
 
 import readline from "readline";
-import logger from "./src/utils/logger.js";
+import {logger} from "./src/utils/logger.js";
 import { onChat } from "./src/bot/chatHandler.js";
 
 const rl = readline.createInterface({

@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
-import logger from '../utils/logger'
+import {logger} from '../utils/logger.js'
 
 //load from .env
 const API_KEY = process.env.ELEVENLABS_API_KEY;
@@ -28,7 +28,8 @@ export async function speak(text, voiceId = DEFAULT_VOICE) {
         const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`;
 
         const response = await axios.post(
-            url,{
+            url,
+            {
                    text: text,
                 model_id: "eleven_multilingual_v2",
                 voice_settings: {
@@ -51,6 +52,7 @@ export async function speak(text, voiceId = DEFAULT_VOICE) {
 
         fs.writeFileSync(filePath, response.data);
         logger.success(`🎧 ElevenLabs TTS saved: ${filePath}`)
+        return filePath
     } catch (error) {
         logger.error(`❌ ElevenLabs TTS Error: ${error.message}`);
         return null;
