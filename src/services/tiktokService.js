@@ -1,5 +1,5 @@
 import TikTokLiveConnection from "tiktok-live-connector";
-import config from "../config/config.js";
+import {config} from "../config/config.js";
 import {logger} from "../utils/logger.js";
 
 // ----------------------------------------------------

@@ -1,69 +1,40 @@
+import "dotenv/config"; // MUST be first
+
 import { TikTokLiveConnection } from "tiktok-live-connector";
 import chalk from "chalk";
-import config from "./config/default"
+import config from "./config/default.js";
+import { onChat } from "./src/bot/chatHandler.js";
+import { onGift } from "./src/bot/giftHandler.js";
+import { logger } from "./src/utils/logger.js";
 
+// Create the connection
+const tiktokUsername = config.tiktokUsername;
 
-//Create the connection
-let tiktokUsername = config.tiktokUsername;
-let tiktokLive = new TikTokLiveConnection(tiktokUsername,{
+const tiktokLive = new TikTokLiveConnection(tiktokUsername, {
     enableWebsocketFallback: true
 });
 
-
-//--log when connected---
+// Connect
 tiktokLive.connect()
-.then(state => {
-    console.log(chalk.green(`🎉 Connected to @${tiktokUsername}'s LIVE!`));
-        console.log(chalk.blue(`👀 Viewers: ${state.viewerCount}`));
-})
-.catch(err => console.error("❌ Failed to connect:", err));
+    .then(state => {
+        logger.success(`🎉 Connected to @${tiktokUsername}'s LIVE!`);
+        logger.info(`👀 Viewers: ${state.viewerCount}`);
+    })
+    .catch(err => logger.error(`❌ Failed to connect: ${err.message}`));
 
-
-//--Read Gift Events---
-tiktokLive.on("gift", data => {
-    console.log(chalk.magenta(`[GIFT] ${data.uniqueId} sent ${data.giftName}`));
-
-    autoThankGift(data);
+// Chat event
+tiktokLive.on("chat", async (data) => {
+    logger.info(`💬 ${data.uniqueId}: ${data.comment}`);
+    await onChat(data.uniqueId, data.comment);
 });
 
-
-//-- Reads Chat comments --
-tiktokLive.on("chat", data => {
-    console.log(chalk.yellow(`[CHAT] ${data.uniqueId}: ${data.comment}`))
-})
-
-
-//--Like Event--
-tiktokLive.on("like", data => {
-    console.log(chalk.cyan(`[LIKE] ${data.uniqueId} liked the stream`))
+// Gift event
+tiktokLive.on("gift", async (data) => {
+    logger.event("GIFT", data.giftName);
+    await onGift(data);
 });
 
-//-----------------
-//AUTO-REPLY LOGIC
-//-----------------
-
-function autoRespondToChat(message) {
-    const text = message.comment.toLowerCase();
-
-
-    if(text.includes("hi") || text.inculdes("hello") || text.includes("Awe")  || text.inculdes("What up man")) {
-        console.log(chalk.green(`🤖 BOT: Hello @${message.uniqueId}!`))
-    }
-
-    if(text.includes("like")) {
-         console.log(chalk.green(`🤖 BOT: Don't forget to LIKE the stream ❤`));
-    }
-
-    if(text.includes("gift")) {
-          console.log(chalk.green(`🤖 BOT: Gifts help support the stream 🙏`));
-    }
-
-    //Add more resonses later
-} 
-
-// ----------------------------------
-// 📌 AUTO THANK GIFTS
-// ----------------------------------
-function autoThankGift(data) {
-    console.log(chalk.green(`🤖 BOT: Thank you @${data.uniqueId} for the ${data.giftName}! ❤️`));
-}
+// Like event
+tiktokLive.on("like", (data) => {
+    logger.event("LIKE", data.uniqueId);
+});

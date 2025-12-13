@@ -11,7 +11,7 @@ export default {
 
         cooldowns: {
             likeReminder: 30,
-            giftTanks: 5
+            giftThanks: 5
         }
      },
 
