@@ -2,10 +2,13 @@ import fs from 'fs';
 import path from 'path';
 import axios from 'axios';
 import {logger} from '../utils/logger.js'
+import { playAudio } from '../utils/audioPlayer.js';
 
 //load from .env
 const API_KEY = process.env.ELEVENLABS_API_KEY;
 const DEFAULT_VOICE = process.env.ELEVENLABS_DEFAULT_VOICE;
+console.log("ELEVENLABS_API_KEY:", process.env.ELEVENLABS_API_KEY);
+
 
 
 //Create audio directory
@@ -51,7 +54,8 @@ export async function speak(text, voiceId = DEFAULT_VOICE) {
         const filePath = path.join(AUDIO_OUTPUT, fileName);
 
         fs.writeFileSync(filePath, response.data);
-        logger.success(`🎧 ElevenLabs TTS saved: ${filePath}`)
+        logger.success(`🎧 ElevenLabs TTS saved: ${filePath}`);
+        await playAudio(filePath);
         return filePath
     } catch (error) {
         logger.error(`❌ ElevenLabs TTS Error: ${error.message}`);
